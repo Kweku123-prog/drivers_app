@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "525888592619",
+    "firebase_url": "https://flutter-uber-clone-with-admin-default-rtdb.firebaseio.com",
+    "project_id": "flutter-uber-clone-with-admin",
+    "storage_bucket": "flutter-uber-clone-with-admin.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525888592619:android:f5e0f93ec58a6678867cae",
+        "android_client_info": {
+          "package_name": "com.muhammadali.driversapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuDxriw8CH8NbVLiXtKFQ2Nb64AoRSdyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525888592619:android:7f6a25ba36fae20b867cae",
+        "android_client_info": {
+          "package_name": "com.muhammadali.usersapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuDxriw8CH8NbVLiXtKFQ2Nb64AoRSdyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
