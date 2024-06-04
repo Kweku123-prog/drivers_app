@@ -5,7 +5,11 @@ import 'package:drivers_app/global/global_var.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+
+import '../models/direction_details.dart';
+
 class CommonMethods
 {
   checkConnectivity(BuildContext context) async
@@ -24,6 +28,25 @@ class CommonMethods
     var snackBar = SnackBar(content: Text(messageText));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
+
+  turnOffLocationUpdatesForHomePage()
+  {
+    positionStreamHomePage!.pause();
+
+    Geofire.removeLocation(FirebaseAuth.instance.currentUser!.uid);
+  }
+
+  turnOnLocationUpdatesForHomePage()
+  {
+    positionStreamHomePage!.resume();
+
+    Geofire.setLocation(
+      FirebaseAuth.instance.currentUser!.uid,
+      driverCurrentPosition!.latitude,
+      driverCurrentPosition!.longitude,
+    );
+  }
+
   static sendRequestToAPI(String apiUrl) async
   {
     http.Response responseFromAPI = await http.get(Uri.parse(apiUrl));
@@ -46,21 +69,43 @@ class CommonMethods
       return "error";
     }
   }
-  turnOffLocationUpdatesForHomePage()
-  {
-    positionStreamHomePage!.pause();
 
-    Geofire.removeLocation(FirebaseAuth.instance.currentUser!.uid);
+  ///Directions API
+  static Future<DirectionDetails?> getDirectionDetailsFromAPI(LatLng source, LatLng destination) async
+  {
+    String urlDirectionsAPI = "https://maps.googleapis.com/maps/api/directions/json?destination=${destination.latitude},${destination.longitude}&origin=${source.latitude},${source.longitude}&mode=driving&key=$googleMapKey";
+
+    var responseFromDirectionsAPI = await sendRequestToAPI(urlDirectionsAPI);
+
+    if(responseFromDirectionsAPI == "error")
+    {
+      return null;
+    }
+
+    DirectionDetails detailsModel = DirectionDetails();
+
+    detailsModel.distanceTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["text"];
+    detailsModel.distanceValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["value"];
+
+    detailsModel.durationTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["text"];
+    detailsModel.durationValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["value"];
+
+    detailsModel.encodedPoints = responseFromDirectionsAPI["routes"][0]["overview_polyline"]["points"];
+
+    return detailsModel;
   }
 
-  turnOnLocationUpdatesForHomePage()
+  calculateFareAmount(DirectionDetails directionDetails)
   {
-    positionStreamHomePage!.resume();
+    double distancePerKmAmount = 0.4;
+    double durationPerMinuteAmount = 0.3;
+    double baseFareAmount = 2;
 
-    Geofire.setLocation(
-      FirebaseAuth.instance.currentUser!.uid,
-      driverCurrentPosition!.latitude,
-      driverCurrentPosition!.longitude,
-    );
+    double totalDistanceTravelFareAmount = (directionDetails.distanceValueDigits! / 1000) * distancePerKmAmount;
+    double totalDurationSpendFareAmount = (directionDetails.durationValueDigits! / 60) * durationPerMinuteAmount;
+
+    double overAllTotalFareAmount = baseFareAmount + totalDistanceTravelFareAmount + totalDurationSpendFareAmount;
+
+    return overAllTotalFareAmount.toStringAsFixed(1);
   }
 }

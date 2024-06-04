@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:drivers_app/methods/map_theme_methods.dart';
 import 'package:drivers_app/pushNotification/push_notification_system.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -29,24 +30,8 @@ class _HomePageState extends State<HomePage>
   String titleToShow = "GO ONLINE NOW";
   bool isDriverAvailable = false;
   DatabaseReference? newTripRequestReference;
+  MapThemeMethods themeMethods = MapThemeMethods();
 
-
-  void updateMapTheme(GoogleMapController controller)
-  {
-    getJsonFileFromThemes("themes/night_style.json").then((value)=> setGoogleMapStyle(value, controller));
-  }
-
-  Future<String> getJsonFileFromThemes(String mapStylePath) async
-  {
-    ByteData byteData = await rootBundle.load(mapStylePath);
-    var list = byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes);
-    return utf8.decode(list);
-  }
-
-  setGoogleMapStyle(String googleMapStyle, GoogleMapController controller)
-  {
-    controller.setMapStyle(googleMapStyle);
-  }
 
   getCurrentLiveLocationOfDriver() async
   {
@@ -119,12 +104,30 @@ class _HomePageState extends State<HomePage>
     notificationSystem.startListeningForNewNotification(context);
   }
 
+  retrieveCurrentDriverInfo() async
+  {
+    await FirebaseDatabase.instance.ref()
+        .child("drivers")
+        .child(FirebaseAuth.instance.currentUser!.uid)
+        .once().then((snap)
+    {
+      driverName = (snap.snapshot.value as Map)["name"];
+      driverPhone = (snap.snapshot.value as Map)["phone"];
+      driverPhoto = (snap.snapshot.value as Map)["photo"];
+      carColor = (snap.snapshot.value as Map)["car_details"]["carColor"];
+      carModel = (snap.snapshot.value as Map)["car_details"]["carModel"];
+      carNumber = (snap.snapshot.value as Map)["car_details"]["carNumber"];
+    });
+
+    initializePushNotificationSystem();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
-    initializePushNotificationSystem();
+    retrieveCurrentDriverInfo();
   }
 
   @override
@@ -142,7 +145,7 @@ class _HomePageState extends State<HomePage>
             onMapCreated: (GoogleMapController mapController)
             {
               controllerGoogleMap = mapController;
-              updateMapTheme(controllerGoogleMap!);
+              themeMethods.updateMapTheme(controllerGoogleMap!);
 
               googleMapCompleterController.complete(controllerGoogleMap);
 
